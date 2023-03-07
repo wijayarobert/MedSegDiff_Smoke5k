@@ -7,6 +7,7 @@ from guided_diffusion import dist_util, logger
 from guided_diffusion.resample import create_named_schedule_sampler
 from guided_diffusion.bratsloader import BRATSDataset, BRATSDataset3D
 from guided_diffusion.isicloader import ISICDataset
+from guided_diffusion.smoke5kloader import SegmentationDataset
 from guided_diffusion.script_util import (
     model_and_diffusion_defaults,
     create_model_and_diffusion,
@@ -16,9 +17,11 @@ from guided_diffusion.script_util import (
 import torch as th
 from guided_diffusion.train_util import TrainLoop
 from visdom import Visdom
-viz = Visdom(port=8850)
+viz = Visdom(use_incoming_socket=False)
 import torchvision.transforms as transforms
-
+image_root='D:\\Courses\\Semester 1 2023\\COMP8604\\Experiment\\MedSegDiff\\dataset\\SMOKE5K\\SMOKE5K\\train\\img\\'
+gt_root='D:\\Courses\\Semester 1 2023\\COMP8604\\Experiment\\MedSegDiff\\dataset\\SMOKE5K\\SMOKE5K\\train\\gt\\'
+root_dir = 'D:\\Courses\\Semester 1 2023\\COMP8604\\Experiment\\MedSegDiff\\dataset\\SMOKE5K\\SMOKE5K\\train\\'
 def main():
     args = create_argparser().parse_args()
 
@@ -27,22 +30,28 @@ def main():
 
     logger.log("creating data loader...")
 
-    if args.data_name == 'ISIC':
+    tran_list = [transforms.Resize((args.image_size, args.image_size)), transforms.ToTensor(),]
+    transform_train = transforms.Compose(tran_list)
+
+    # ds = SegmentationDataset(args.data_dir, transform_train)
+
+    if args.data_name == 'SMOKE5K':
         tran_list = [transforms.Resize((args.image_size,args.image_size)), transforms.ToTensor(),]
         transform_train = transforms.Compose(tran_list)
 
-        ds = ISICDataset(args, args.data_dir, transform_train)
+        ds = SegmentationDataset(args.data_dir, transform_train)
         args.in_ch = 4
-    elif args.data_name == 'BRATS':
-        tran_list = [transforms.Resize((args.image_size,args.image_size)),]
-        transform_train = transforms.Compose(tran_list)
+    # elif args.data_name == 'BRATS':
+    #     tran_list = [transforms.Resize((args.image_size,args.image_size)),]
+    #     transform_train = transforms.Compose(tran_list)
 
-        ds = BRATSDataset3D(args.data_dir, transform_train, test_flag=False)
-        args.in_ch = 5
+    #     ds = BRATSDataset3D(args.data_dir, transform_train, test_flag=False)
+
     datal= th.utils.data.DataLoader(
         ds,
         batch_size=args.batch_size,
-        shuffle=True)
+        shuffle=True
+        )
     data = iter(datal)
 
     logger.log("creating model and diffusion...")
@@ -82,8 +91,8 @@ def main():
 
 def create_argparser():
     defaults = dict(
-        data_name = 'BRATS',
-        data_dir="../dataset/brats2020/training",
+        data_name = 'SMOKE5K',
+        data_dir="D:\\Courses\\Semester 1 2023\\COMP8604\\Experiment\\MedSegDiff\\dataset\\SMOKE5K\\SMOKE5K\\train\\",
         schedule_sampler="uniform",
         lr=1e-4,
         weight_decay=0.0,
@@ -98,7 +107,7 @@ def create_argparser():
         fp16_scale_growth=1e-3,
         gpu_dev = "0",
         multi_gpu = None, #"0,1,2"
-        out_dir='./results/'
+        out_dir='D:\\Courses\\Semester 1 2023\\COMP8604\\Experiment\\MedSegDiff\\output\\'
     )
     defaults.update(model_and_diffusion_defaults())
     parser = argparse.ArgumentParser()
