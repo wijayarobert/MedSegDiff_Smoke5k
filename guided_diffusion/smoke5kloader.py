@@ -63,8 +63,8 @@ class SegmentationDataset(Dataset):
 
         if self.mode == 'Training':
             return (image, mask)
-        # else:
-        #     return (img, mask, name) 
+        else:
+            return (img, mask, image_filenames) 
         
         # return image, mask
 

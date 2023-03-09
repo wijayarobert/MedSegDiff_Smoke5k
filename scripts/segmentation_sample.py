@@ -17,6 +17,7 @@ import torch.distributed as dist
 from guided_diffusion import dist_util, logger
 from guided_diffusion.bratsloader import BRATSDataset, BRATSDataset3D
 from guided_diffusion.isicloader import ISICDataset
+from guided_diffusion.smoke5kloader import SegmentationDataset
 import torchvision.utils as vutils
 from guided_diffusion.utils import staple
 from guided_diffusion.script_util import (
@@ -46,11 +47,10 @@ def main():
     dist_util.setup_dist(args)
     logger.configure(dir = args.out_dir)
 
-    if args.data_name == 'ISIC':
+    if args.data_name == 'SMOKE5K':
         tran_list = [transforms.Resize((args.image_size,args.image_size)), transforms.ToTensor(),]
         transform_test = transforms.Compose(tran_list)
-
-        ds = ISICDataset(args, args.data_dir, transform_test, mode = 'Test')
+        ds = SegmentationDataset(args, args.data_dir, transform_test, mode = 'Test')
         args.in_ch = 4
     elif args.data_name == 'BRATS':
         tran_list = [transforms.Resize((args.image_size,args.image_size)),]
@@ -94,6 +94,8 @@ def main():
         c = th.randn_like(b[:, :1, ...])
         img = th.cat((b, c), dim=1)     #add a noise channel$
         if args.data_name == 'ISIC':
+            slice_ID=path[0].split("_")[-1].split('.')[0]
+        elif args.data_name == 'SMOKE5K':
             slice_ID=path[0].split("_")[-1].split('.')[0]
         elif args.data_name == 'BRATS':
             # slice_ID=path[0].split("_")[2] + "_" + path[0].split("_")[4]
@@ -153,13 +155,13 @@ def main():
 
 def create_argparser():
     defaults = dict(
-        data_name = 'BRATS',
-        data_dir="../dataset/brats2020/testing",
+        data_name = 'SMOKE5K',
+        data_dir="../dataset/SMOKE5K/SMOKE5K/test/",
         clip_denoised=True,
         num_samples=1,
         batch_size=1,
         use_ddim=False,
-        model_path="",
+        model_path="../model/emasavedmodel_0_9999.pt",
         num_ensemble=5,      #number of samples in the ensemble
         gpu_dev = "0",
         out_dir='./results/',
