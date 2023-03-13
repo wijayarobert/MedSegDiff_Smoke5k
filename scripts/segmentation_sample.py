@@ -1,11 +1,7 @@
-
-
 import argparse
 import os
 from ssl import OP_NO_TLSv1
 import nibabel as nib
-# from visdom import Visdom
-# viz = Visdom(port=8850)
 import sys
 import random
 sys.path.append(".")
@@ -50,7 +46,7 @@ def main():
     if args.data_name == 'SMOKE5K':
         tran_list = [transforms.Resize((args.image_size,args.image_size)), transforms.ToTensor(),]
         transform_test = transforms.Compose(tran_list)
-        ds = SegmentationDataset(args, args.data_dir, transform_test, mode = 'Test')
+        ds = SegmentationDataset(args.data_dir, transform_test, mode = 'Test')
         args.in_ch = 4
     elif args.data_name == 'BRATS':
         tran_list = [transforms.Resize((args.image_size,args.image_size)),]
@@ -63,6 +59,10 @@ def main():
         batch_size=1,
         shuffle=True)
     data = iter(datal)
+    print("Number of samples:", len(datal))
+    print("Data type:", type(datal))
+    print("Data loader iterator type:", type(data))
+
 
     logger.log("creating model and diffusion...")
 
@@ -156,12 +156,12 @@ def main():
 def create_argparser():
     defaults = dict(
         data_name = 'SMOKE5K',
-        data_dir="../dataset/SMOKE5K/SMOKE5K/test/",
+        data_dir="/content/MedSegDiff_Smoke5k/dataset/SMOKE5K/SMOKE5K/test",
         clip_denoised=True,
         num_samples=1,
         batch_size=1,
         use_ddim=False,
-        model_path="../model/emasavedmodel_0_9999.pt",
+        model_path="/content/drive/MyDrive/model/emasavedmodel_0_9999.pt",
         num_ensemble=5,      #number of samples in the ensemble
         gpu_dev = "0",
         out_dir='./results/',

@@ -23,7 +23,6 @@ class SegmentationDataset(Dataset):
         self.mask_dir = os.path.join(root_dir, 'gt')
         self.image_filenames = os.listdir(self.image_dir)
         self.mode = mode
-        
 
     def __len__(self):
         return len(self.image_filenames)
@@ -31,6 +30,8 @@ class SegmentationDataset(Dataset):
     def __getitem__(self, idx):
         img_path = os.path.join(self.image_dir, self.image_filenames[idx])
         mask_path = os.path.join(self.mask_dir, self.image_filenames[idx])
+        # img_path = '/content/MedSegDiff_Smoke5k/dataset/SMOKE5K/SMOKE5K/test/img/1530902341_+00660.jpg'
+
 
         # Replace file extension from .jpg to .png
         # img_path = img_path.replace('.jpg', '.png')
@@ -38,18 +39,18 @@ class SegmentationDataset(Dataset):
         
         with Image.open(img_path) as img:
             img = Image.open(img_path).convert('RGB')
+            # img.show()
             # Resize image
             # print(img.shape)
             # image = transforms.Resize((256, 256))(img)
             # Convert to tensor
-            # image = transforms.ToTensor()(image)
+            # image = transforms.ToTensor()(img)
         
         with Image.open(mask_path) as mask:
             mask = mask.convert('L')
             # Resize mask
             # mask = transforms.Resize((256, 256))(mask)
             # Convert to tensor
-           
             # mask = transforms.ToTensor()(mask)
         
         # if self.transforms is not None:
@@ -64,7 +65,7 @@ class SegmentationDataset(Dataset):
         if self.mode == 'Training':
             return (image, mask)
         else:
-            return (img, mask, image_filenames) 
+            return (image, mask, self.image_filenames[idx]) 
         
         # return image, mask
 
